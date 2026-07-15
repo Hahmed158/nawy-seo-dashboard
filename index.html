@@ -627,7 +627,7 @@
    Paste your two deployed Apps Script Web App URLs here.
    See the setup guide for how to get these.
    ============================================================ */
-const SEO_API_URL = 'https://script.google.com/macros/s/AKfycbwWSBr4g5Nib4AerphD2gaY6fDZFxptEeCRxVaCkTf2w4mhaMv-L6J2vUsa3SSng6DmnQ/exec';
+const SEO_API_URL = 'https://script.google.com/macros/s/AKfycbyIMYfzuHqEdJenxfGwOMjLAgPYhHqYTc8VpNWDGWGoDkCi_m9XUGrwAQWPblcK9Ffi3w/exec';
 const AI_API_URL  = 'https://script.google.com/macros/s/AKfycbz_vJi2FlxK0bvZ6u1UiksHp9GhY5ueOJwbrAXqyvaUo6AVi8V_eULtU4EnIDGnhkjwoQ/exec';
 
 // Data populated live from the URLs above (starts empty, filled by loadLiveData()).
@@ -1092,6 +1092,11 @@ function renderTopQueries(segmentKey, segLabel){
 let overviewMode = 'monthly';
 
 function renderMonthlyGrowth(){
+  if(!MONTHLY_DATA || MONTHLY_DATA.length === 0){
+    document.getElementById('quartersNote').textContent = 'No monthly data came back from the sheet — check the sheet tab is named exactly "Monthly- Search Console".';
+    document.getElementById('kpi-quarters-growth').innerHTML = '';
+    return;
+  }
   const lastMonth = MONTHLY_DATA[MONTHLY_DATA.length - 1];
   const sameMonthLastYear = MONTHLY_DATA.find(m => {
     const [y, mo] = m.month.split('-').map(Number);
@@ -1132,6 +1137,11 @@ function renderMonthlyGrowth(){
 function renderQuartersGrowth(){
   const q2_26 = QUARTERS_DATA.find(q => q.quarter === 'Q2 2026');
   const q2_25 = QUARTERS_DATA.find(q => q.quarter === 'Q2 2025');
+  if(!q2_26 || !q2_25){
+    document.getElementById('quartersNote').textContent = 'Q2 2026 or Q2 2025 quarter data wasn\'t found — check the "Quarter Total Clicks" and "Total Impressions" sheet tabs have matching quarter labels.';
+    document.getElementById('kpi-quarters-growth').innerHTML = '';
+    return;
+  }
 
   document.getElementById('quartersNote').textContent =
     'Comparing Q2 2026 vs. Q2 2025 (YoY).';
@@ -1224,9 +1234,14 @@ function renderQuartersTab(){
 
 /* ---------- branded / non-branded ---------- */
 function renderBrandedTab(){
+  if(!BRANDED_DATA || BRANDED_DATA.length === 0){
+    document.getElementById('kpi-branded').innerHTML =
+      '<div class="empty-note" style="grid-column:1/-1;">No branded/non-branded data came back from the sheet. Double-check the sheet tab is named exactly <b>"Branded & Non-branded monthly t"</b> (that exact truncated name, matching the Apps Script) — a rename during the .xlsx → Google Sheets conversion is the most likely cause.</div>';
+    return;
+  }
   const last = BRANDED_DATA[BRANDED_DATA.length - 1];
-  const prev = BRANDED_DATA[BRANDED_DATA.length - 2];
-  const brandedShare = (last.totalBrandedClicks / last.totalClicks) * 100;
+  const prev = BRANDED_DATA[BRANDED_DATA.length - 2] || last;
+  const brandedShare = last.totalClicks ? (last.totalBrandedClicks / last.totalClicks) * 100 : 0;
   const nonBrandedShare = 100 - brandedShare;
 
   document.getElementById('kpi-branded').innerHTML = `
