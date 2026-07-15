@@ -627,8 +627,8 @@
    Paste your two deployed Apps Script Web App URLs here.
    See the setup guide for how to get these.
    ============================================================ */
-const SEO_API_URL = 'https://script.google.com/macros/s/AKfycbx21WKUwf7Jci7IQcuh2k_XiHIPvcdGe7CTCF07hVRWIa8nhyr3F_Gj1mi5jEMYRqk-BA/exec';
-const AI_API_URL  = 'https://script.google.com/macros/s/AKfycbzrMVgi6qsZ99jHRDct2eEajE4y6OEEN8VPwRBvr6F1LQeC3MTcCSmQF9ownb2FNiHPxw/exec';
+const SEO_API_URL = 'PASTE_YOUR_SEO_SHEET_WEB_APP_URL_HERE';
+const AI_API_URL  = 'PASTE_YOUR_AI_SHEET_WEB_APP_URL_HERE';
 
 // Data populated live from the URLs above (starts empty, filled by loadLiveData()).
 let GSC_DATA = {};
@@ -1752,9 +1752,9 @@ async function loadLiveData(){
 
 async function boot(){
   const ok = await loadLiveData();
-  document.getElementById('loadingOverlay').style.display = 'none';
-  if(!ok) return;
+  if(!ok) return; // showLoadError() already put an error message in the (still-visible) overlay
 
+  document.getElementById('loadingOverlay').style.display = 'none';
   initPills();
   initOverviewPills();
   initTabs();
