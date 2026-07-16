@@ -72,17 +72,11 @@
   .brand-title h1{font-size:17px; margin:0; font-weight:600; color:#fff;}
   .brand-title span{font-size:12px; color:rgba(255,255,255,.65); font-weight:400;}
 
-  /* date filter */
+  /* header action bar (just holds the Refresh data button now) */
   .date-filter{
     display:flex; align-items:center; gap:8px; flex-wrap:wrap;
     background:rgba(255,255,255,.08);
     padding:8px 10px; border-radius:10px;
-  }
-  .date-filter label{font-size:11px; color:rgba(255,255,255,.7); margin-right:2px;}
-  .date-filter input[type=date], .date-filter select{
-    background:rgba(255,255,255,.95); border:none; border-radius:6px;
-    padding:6px 8px; font-size:12.5px; color:var(--navy); font-family:inherit;
-    max-width:190px; cursor:pointer;
   }
   .preset-btn{
     background:rgba(255,255,255,.12); color:#fff; border:1px solid rgba(255,255,255,.2);
@@ -311,8 +305,6 @@
     .brand-title span{font-size:10.5px;}
 
     .date-filter{width:100%; padding:8px; gap:6px;}
-    .date-filter label{font-size:10px;}
-    .date-filter input[type=date], .date-filter select{font-size:11.5px; padding:5px 6px; min-width:0; flex:1; max-width:none;}
     .preset-btn{padding:5px 10px; font-size:11px;}
 
     nav.tabnav{
@@ -415,12 +407,6 @@
       </div>
     </div>
     <div class="date-filter" id="dateFilter">
-      <button class="preset-btn" data-preset="8">Last 8w</button>
-      <button class="preset-btn" data-preset="12">Last 12w</button>
-      <button class="preset-btn" data-preset="26">Last 6m</button>
-      <button class="preset-btn active" data-preset="all">All time</button>
-      <label>From</label><select id="dateFrom"></select>
-      <label>To</label><select id="dateTo"></select>
       <button class="preset-btn" id="refreshBtn" style="background:var(--teal); border-color:var(--teal);">Refresh data</button>
     </div>
   </div>
@@ -716,7 +702,6 @@ const SEGMENTS = [
 
 let activeSegment = 'Compound';
 let activeTab = 'quarters';
-let dateFrom = null, dateTo = null;
 
 /* ---------- date helpers ---------- */
 function allWeekStarts(){
@@ -733,27 +718,7 @@ function computeDateRange(){
 }
 
 function filterRows(rows, dateKey){
-  return rows.filter(r => {
-    const start = r['Week Start'] || r[dateKey];
-    const end = r['Week End'] || r[dateKey];
-    if(dateFrom && end < dateFrom) return false;
-    if(dateTo && start > dateTo) return false;
-    return true;
-  });
-}
-
-function setPreset(weeks){
-  if(weeks === 'all'){
-    dateFrom = null; dateTo = null;
-    document.getElementById('dateFrom').value = MIN_DATE;
-    document.getElementById('dateTo').value = MAX_DATE;
-    return;
-  }
-  const idx = Math.max(0, ALL_WEEKS.length - weeks);
-  dateFrom = ALL_WEEKS[idx];
-  dateTo = MAX_DATE;
-  document.getElementById('dateFrom').value = dateFrom;
-  document.getElementById('dateTo').value = dateTo;
+  return rows; // date filtering removed - always show the full available range
 }
 
 /* ---------- formatting ---------- */
@@ -1682,46 +1647,6 @@ function initTabs(){
   });
 }
 
-function weekLabel(weekStartStr){
-  const start = new Date(weekStartStr+'T00:00:00');
-  const end = new Date(start); end.setDate(end.getDate()+6);
-  const fmt = (d) => d.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
-  return 'Week of ' + fmt(start) + ' - ' + fmt(end);
-}
-
-function populateWeekSelects(){
-  const options = ALL_WEEKS.map(w => `<option value="${w}">${weekLabel(w)}</option>`).join('');
-  document.getElementById('dateFrom').innerHTML = options;
-  document.getElementById('dateTo').innerHTML = options;
-  document.getElementById('dateFrom').value = MIN_DATE;
-  document.getElementById('dateTo').value = MAX_DATE;
-}
-
-function initDateFilter(){
-  populateWeekSelects();
-
-  document.querySelectorAll('.preset-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      const preset = btn.dataset.preset;
-      setPreset(preset === 'all' ? 'all' : parseInt(preset,10));
-      renderActiveTab();
-    });
-  });
-
-  document.getElementById('dateFrom').addEventListener('change', (e)=>{
-    dateFrom = e.target.value;
-    document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
-    renderActiveTab();
-  });
-  document.getElementById('dateTo').addEventListener('change', (e)=>{
-    dateTo = e.target.value;
-    document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
-    renderActiveTab();
-  });
-}
-
 /* ============================================================
    LIVE DATA LOADING
    ============================================================ */
@@ -1861,7 +1786,6 @@ async function boot(){
   initPills();
   initOverviewPills();
   initTabs();
-  initDateFilter();
   renderActiveTab();
 
   document.getElementById('refreshBtn').addEventListener('click', async ()=>{
@@ -1869,10 +1793,6 @@ async function boot(){
     const success = await loadLiveData();
     document.getElementById('refreshBtn').textContent = 'Refresh data';
     if(success){
-      populateWeekSelects();
-      dateFrom = null; dateTo = null;
-      document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
-      document.querySelector('.preset-btn[data-preset="all"]').classList.add('active');
       renderActiveTab();
     }
   });
