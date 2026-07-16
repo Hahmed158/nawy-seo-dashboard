@@ -829,14 +829,14 @@ function renderKPI(containerId, rows, dateKey, opts){
     </div>`;
 }
 
-/* ---------- last week vs prior week snapshot (always uses the true latest week, independent of the date filter) ---------- */
+/* ---------- last week vs prior week snapshot (respects the global date filter's "To" boundary) ---------- */
 function renderSnapshot(containerId, captionId, sheetKey){
-  const rows = GSC_DATA[sheetKey].slice().sort((a,b)=>a['Week Start']<b['Week Start']?-1:1);
+  const rows = filterRows(GSC_DATA[sheetKey], 'Week Start').slice().sort((a,b)=>a['Week Start']<b['Week Start']?-1:1);
   const el = document.getElementById(containerId);
   const capEl = captionId ? document.getElementById(captionId) : null;
   if(rows.length < 2){
     el.innerHTML = '';
-    if(capEl) capEl.textContent = 'Not enough data yet.';
+    if(capEl) capEl.textContent = 'Not enough data in the selected date range.';
     return;
   }
   const last = rows[rows.length-1];
